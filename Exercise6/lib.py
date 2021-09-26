@@ -1,6 +1,34 @@
 import random
 
 
+def intersect_lists(b, s):
+    rt = []
+    for el in s:
+        if el in b:
+            rt.append(el)
+    return rt
+
+
+def list_substract(b, s):
+    rt = []
+    for i in range(len(b)):
+        if b[i] not in s:
+            rt.append(b[i])
+    return rt
+
+
+def is_matrix_only_form_chr(m, c):
+    for row in m:
+        for el in row:
+            if el != c:
+                return False
+    return True
+
+
+def error():
+    print("Ошибка валидации введенных данных.")
+
+
 def is_in_range(x, start, end):
     if x < start or x > end:
         return 0

@@ -1,5 +1,3 @@
-
-import random
 from Field import Field
 from lib import *
 from data_parser import load_field
@@ -8,10 +6,6 @@ from solver import solve
 
 HELLO = "Привет!\nЧтобы начать новую игру напиши start\n"\
         "Чтобы загрузить старую игру напиши load {filename}\nЧтобы играл бот, напиши bot"
-
-
-def error():
-    print("Ошибка валидации введенных данных.")
 
 
 def get_num(text):
@@ -73,23 +67,22 @@ def menu():
 
 def start():
     print("Создаем поле n*m")
-    flag = True
     n = get_num("Введите число n")
-    if n <= 0:
+    while n <= 0:
         error()
         n = get_num("Введите число n")
     m = get_num("Введите число m")
-    if m <= 0:
+    while m <= 0:
         error()
-        n = get_num("Введите число n")
+        m = get_num("Введите число m")
     bomb_min = get_num("Введите минимальное число бомб на карте(<=n*m; > 0)")
     while bomb_min <= 0 or bomb_min > n*m:
         error()
         bomb_min = get_num("Введите минимальное число бомб на карте(<=n*m; > 0)")
-    bomb_max = get_num("Введите максимальное число бомб на карте(<n*m; > минимального)")
+    bomb_max = get_num("Введите максимальное число бомб на карте(<n*m; >= минимального)")
     while bomb_max < bomb_min or bomb_max > n*m:
         error()
-        bomb_max = get_num("Введите максимальное число бомб на карте(<n*m; > минимального)")
+        bomb_max = get_num("Введите максимальное число бомб на карте(<n*m; >= минимального)")
     bomb_count = random.randint(bomb_min, bomb_max)
     return Field(n, m, get_bombs(n, m, bomb_count))
 

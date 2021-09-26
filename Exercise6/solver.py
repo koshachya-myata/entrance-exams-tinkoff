@@ -1,7 +1,20 @@
 from Field import Field
-
 from lib import *
 from random import randint
+
+
+def bot_win(field=None):
+    if field is not None:
+        field.print_field()
+    print("Бот победил!")
+    exit(0)
+
+
+def bot_dead(field=None):
+    if field is not None:
+        field.print_field()
+    print("Бот проиграл(!")
+    exit(0)
 
 
 def set_group(coords, matrix):
@@ -41,22 +54,6 @@ def group_substract(b, s):
     groups = list_substract(b[1], s[1])
     rt.append(b[0] - s[0])
     rt.append(groups)
-    return rt
-
-
-def list_substract(b, s):
-    rt = []
-    for i in range(len(b)):
-        if b[i] not in s:
-            rt.append(b[i])
-    return rt
-
-
-def intersect_lists(b, s):
-    rt = []
-    for el in s:
-        if el in b:
-            rt.append(el)
     return rt
 
 
@@ -127,30 +124,20 @@ def create_cells_groups(field: Field):
     return groups
 
 
-def bot_win(field):
-    field.print_field()
-    print("Бот победил!")
-    exit(0)
-
-
-def bot_dead(field):
-    field.print_field()
-    print("Бот проиграл(!")
-    exit(0)
-
-
 def open_all(field: Field):
     """
     Открывает все оставшиеся ячейки
     (используется после того, как бот использовал все флажки).
     """
-    matrix = field.get_field()
     r, c = field.get_size()
     for i in range(r):
         for j in range(c):
-            if matrix[i][j] == 'x':
+            if field.get_field()[i][j] == 'x':
+                print(f"Bot opens {i+1} {j+1}:")
                 if not field.open(i + 1, j + 1):
                     bot_dead(field)
+                field.print_field()
+    return field
 
 
 def open_random(field):
@@ -163,8 +150,9 @@ def open_random(field):
                 closed.append([i + 1, j + 1])
     choice = closed[randint(0, len(closed) - 1)]
     is_alive = field.open(choice[0], choice[1])
+    print(f"Bot opens {choice[0]} {choice[1]}:")
+    field.print_field()
     if not is_alive:
-        print(choice)
         bot_dead(field)
     return field
 
@@ -181,22 +169,40 @@ def action_groups(groups, field: Field):
             for n in gr[1]:
                 if field.get_field()[n[0]][n[1]] == 'x':
                     is_any_open = True
+                    print(f"Bot opens {n[0] + 1} {n[1] + 1}:")
                     if not field.open(n[0] + 1, n[1] + 1):
                         bot_dead(field)
+                    field.print_field()
+                    if field.is_win():
+                        bot_win()
 
         if len(gr[1]) == gr[0]:
             for n in gr[1]:
                 if field.get_field()[n[0]][n[1]] != 'f':
                     field.change_flag(n[0] + 1, n[1] + 1)
+                    print(f"Bot flags {n[0] + 1} {n[1] + 1}:")
+                    field.print_field()
                 if field.get_flags_count() == field.get_bombs_count():
                     is_any_open = True
-                    open_all(field)
+                    field = open_all(field)
                     if field.is_win():
-                        field.print_field()
-                        bot_win(field)
+                        bot_win()
+    if field.get_bombs_count() - field.get_flags_count() == field.closed_cells_count():
+        flag_all(field)
     if not is_any_open:
         return open_random(field)
     return field
+
+
+def flag_all(field: Field):
+    for x in range(field.get_size()[0]):
+        for y in range(field.get_size()[1]):
+            if field.get_field()[x][y] == 'x':
+                print(f"Bot flags {x + 1} {y + 1}:")
+                field.change_flag(x + 1, y + 1)
+                field.print_field()
+                if field.is_win():
+                    bot_win()
 
 
 def solve(field: Field):
@@ -204,12 +210,17 @@ def solve(field: Field):
     x = field.get_size()[0]
     y = field.get_size()[1]
     field.print_field()
-    first = field.open(randint(1, x), randint(1, y))
-    if not first:
+    if field.get_bombs_count() == field.closed_cells_count():
+        flag_all(field)
+    if is_matrix_only_form_chr(field.get_field(), 'x'):
+        rnd_x = randint(1, x)
+        rnd_y = randint(1, y)
+        print(f"Bot opens {rnd_x} {rnd_y}:")
+        first = field.open(rnd_x, rnd_y)
         field.print_field()
-        print("Бот проиграл при первом открытии ячейки :(((")
-        exit(0)
+        if not first:
+            print("Бот проиграл при первом открытии ячейки :(((")
+            exit(0)
     while True:
-        field.print_field()
         groups = create_cells_groups(field)
         field = action_groups(groups, field)

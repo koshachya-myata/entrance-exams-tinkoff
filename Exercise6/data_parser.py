@@ -12,7 +12,11 @@ def load_field(name):
     if os.stat(name).st_size == 0:
         print("Ошибка. Файл пуст")
         return None
-    bombs_enc = list(map(int, next(f).split()))
+    try:
+        bombs_enc = list(map(int, next(f).split()))
+    except ValueError:
+        print("Ошибка чтения файла, данные в файле некорректны")
+        return None
     flag = True
     if len(bombs_enc) % 2 == 1:
         print("Ошибка чтения файла, данные в файле некорректны")
@@ -48,7 +52,11 @@ def load_field(name):
             user_matrix.append(lst)
     f.close()
     rows = len(user_matrix)
-    bombs = decrypt(bombs_enc, rows + cols / 2)
+    try:
+        bombs = decrypt(bombs_enc, rows / 3 + cols / 2 + 1)
+    except ValueError:
+        print("Ошибка чтения файла, данные в файле некорректны")
+        return None
     for x, y in bombs:
         if x <= 0 or x > rows or y <= 0 or y > cols:
             flag = True
@@ -62,13 +70,14 @@ def load_field(name):
 def parse_action(user_input, f):
     lst = user_input.strip().split()
     if not lst:
-        print("Ошибка: неверный формат данных для действия (Flag/Open/Save {filename}/Exit)")
+        print("Ошибка: неверный формат данных для действия ({X} {Y} Flag/Open)/(Save {filename})/(Exit)")
         return [0, 0, 0]
     if lst[0].lower() == "exit":
         exit(0)
     if len(lst) == 2 and lst[0].lower() == "save":
-        f.save(lst[1])
-        exit(0)
+        if f.save(lst[1]):
+            exit(0)
+        return [0, 0, 0]
     size = f.get_size()
     if len(lst) != 3:
         print("Ошибка: неверное количество аргументов")

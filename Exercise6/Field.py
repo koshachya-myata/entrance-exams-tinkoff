@@ -1,5 +1,5 @@
 from lib import *
-from encryption import encrypt, decrypt
+from encryption import encrypt
 
 
 class Field(object):
@@ -57,6 +57,15 @@ class Field(object):
                 for j in range(self._cols):
                     print(self._user_matrix[i][j], end='')
                 print('')
+        print('')
+
+    def closed_cells_count(self):
+        rt = 0
+        for i in range(self._rows):
+            for j in range(self._cols):
+                if self._user_matrix[i][j] == 'x':
+                    rt += 1
+        return rt
 
     def change_flag(self, x, y):
         if x < 1 or x > self._rows or y < 1 or y > self._cols:
@@ -64,7 +73,7 @@ class Field(object):
         if self._user_matrix[x-1][y-1] == 'f':
             self._flags.remove([x, y])
             self._user_matrix[x-1][y-1] = 'x'
-        else:
+        elif self._user_matrix[x-1][y-1] == 'x':
             self._flags.append([x, y])
             self._user_matrix[x-1][y-1] = 'f'
 
@@ -76,13 +85,13 @@ class Field(object):
         self._flags = []
 
     def is_win(self):
-        if sorted(self.get_flags()) == sorted(self.get_bombs()):
-            for i in range(self._rows):
-                for j in range(self._cols):
-                    if self._user_matrix[i][j] != 'x':
-                        return True
-        else:
+        if sorted(self.get_flags()) != sorted(self.get_bombs()):
             return False
+        for i in range(self._rows):
+            for j in range(self._cols):
+                if self._user_matrix[i][j] == 'x':
+                    return False
+        return True
 
     def open_nulls(self, x, y):
         if self._real_matrix[x - 1][y - 1] == 0 and self._user_matrix != 'f':
@@ -115,16 +124,20 @@ class Field(object):
             self._user_matrix[x-1][y-1] = 'B'
             return False
         else:
-            if self._real_matrix[x-1][y-1] == 0:
-                if self._user_matrix[x-1][y-1] == 'x':
+            if self._user_matrix[x - 1][y - 1] == 'x':
+                if self._real_matrix[x - 1][y - 1] == 0:
                     self.open_nulls(x, y)
-            else:
-                self._user_matrix[x-1][y-1] = chr(self._real_matrix[x-1][y-1] + ord('0'))
+                else:
+                    self._user_matrix[x - 1][y - 1] = chr(self._real_matrix[x - 1][y - 1] + ord('0'))
             return True
 
     def save(self, file):
-        f = open(file, 'w')
-        lst = encrypt(self._bombs, self._rows + self._cols / 2)
+        try:
+            f = open(file, 'w')
+        except IOError:
+            print("Ошибка создание файла")
+            return False
+        lst = encrypt(self._bombs, self._rows / 3 + self._cols / 2 + 1)
         for n in lst:
             f.write(str(int(n)) + ' ')
         f.write('\n')
@@ -134,3 +147,4 @@ class Field(object):
             f.write('\n')
         f.close()
         print(f"Файл {file} сохранен.")
+        return True
